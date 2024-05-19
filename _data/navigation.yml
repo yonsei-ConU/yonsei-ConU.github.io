@@ -4,3 +4,11 @@ main:
     url: /categories/
   - title: "Tags"
     url: /tags/
+
+sidebar-category:
+  - title: "Categories"
+    children:
+      - title: "CS"
+        url: /CS/
+      - title: "Math"
+        url: /math/
