@@ -6,7 +6,7 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2024-11-27
+last_modified_at: 2024-11-28
 ---
 
 ```py
@@ -695,13 +695,17 @@ def LCS(str1, str2):
 5-4-3. tarjan(g)
     SCC 타잔 알고리즘 구현체
     강한 연결 요소가 위상정렬된 상태로 리턴됨
-5-4-4. find_articulation_point(g)
+5-4-4. two_sat(N, clauses)
+    변수 N개짜리 2-sat의 만족 가능 여부를 리턴
+    tarjan 함수 필요
+    clauses에는 11280번 문제에서 주어지는 것과 같은 형식으로 입력
+5-4-5. find_articulation_point(g)
     단절점 알고리즘 구현체
     모든 단절점을 리턴
-5-4-5. find_bridge(g)
+5-4-6. find_bridge(g)
     단절선 알고리즘 구현체
     모든 단절선을 리턴
-5-4-6. hopcroft_karp(adj, n, m)
+5-4-7. hopcroft_karp(adj, n, m)
     호프크로프트-카프 이분 매칭 알고리즘 구현체
     adj는 그래프, n은 출발 정점 개수, m은 도착 정점 개수
 """
@@ -1121,6 +1125,29 @@ def tarjan(g):
             dfs(i)
 
     return ret
+
+
+def two_sat(N, clauses):
+    """
+    변수개수 N
+    clauses는 list[pii], 각 pii에 들어있는 정수가 i일때, i > 0이면 i번변수가 참, i < 0이면 i번변수가 거짓
+    """
+    g = [[] for _ in range(N << 1)]
+    for a, b in clauses:
+        if a < 0:
+            a = N - a
+        if b < 0:
+            b = N - b
+        a -= 1; b -= 1
+        g[(a + N) % (2 * N)].append(b)
+        g[(b + N) % (2 * N)].append(a)
+    scc = tarjan(g)
+    for component in scc:
+        component = set(component)
+        for c in component:
+            if (c + N) % (2 * N) in component:
+                return 0
+    return 1
 
 
 def find_articulation_point(g):
