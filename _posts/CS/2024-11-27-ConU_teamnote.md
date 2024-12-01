@@ -6,9 +6,8 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2024-11-28
+last_modified_at: 2024-12-02
 ---
-
 ```py
 import sys
 from collections import deque
@@ -695,8 +694,9 @@ def LCS(str1, str2):
 5-4-3. tarjan(g)
     SCC 타잔 알고리즘 구현체
     강한 연결 요소가 위상정렬된 상태로 리턴됨
-5-4-4. two_sat(N, clauses)
+5-4-4. two_sat(N, clauses, trace=False)
     변수 N개짜리 2-sat의 만족 가능 여부를 리턴
+    trace값이 참이면, 모순이 일어나지 않을 때 가능한 실제 해를 리턴
     tarjan 함수 필요
     clauses에는 11280번 문제에서 주어지는 것과 같은 형식으로 입력
 5-4-5. find_articulation_point(g)
@@ -1127,10 +1127,14 @@ def tarjan(g):
     return ret
 
 
-def two_sat(N, clauses):
+def two_sat(N, clauses, trace=False):
     """
     변수개수 N
     clauses는 list[pii], 각 pii에 들어있는 정수가 i일때, i > 0이면 i번변수가 참, i < 0이면 i번변수가 거짓
+    모순이 일어난다면 False
+    그렇지 않다면
+        trace가 False라면 1
+        trace가 True라면 각 명제별로 참이면 1, 거짓이면 0이 되는 해 리스트
     """
     g = [[] for _ in range(N << 1)]
     for a, b in clauses:
@@ -1142,12 +1146,22 @@ def two_sat(N, clauses):
         g[(a + N) % (2 * N)].append(b)
         g[(b + N) % (2 * N)].append(a)
     scc = tarjan(g)
+    scc_rev = [0] * (N << 1)
+    for i in range(len(scc)):
+        for c in scc[i]:
+            scc_rev[c] = i
+    for i in range(N):
+        if scc_rev[i] == scc_rev[i + N]:
+            return 0
+    if not trace:
+        return 1
+    ret = [-1] * N
     for component in scc:
-        component = set(component)
         for c in component:
-            if (c + N) % (2 * N) in component:
-                return 0
-    return 1
+            idx = c if c < N else c - N
+            if ret[idx] == -1:
+                ret[idx] = c < N
+    return ret
 
 
 def find_articulation_point(g):
