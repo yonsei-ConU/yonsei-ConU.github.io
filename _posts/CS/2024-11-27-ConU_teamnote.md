@@ -6,7 +6,7 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2024-12-02
+last_modified_at: 2024-12-17
 ---
 ```py
 import sys
@@ -752,7 +752,6 @@ def LCA_preprocess(g, root):
 
 
 def LCA_query(u, v, d, table):
-    """table from precompute must be computed before call"""
     if d[v] > d[u]:
         u, v = v, u
     x = d[u] - d[v]
@@ -918,7 +917,6 @@ def bellman_ford(g, st):
 
 def SPFA(g, st):
     """
-    may need some extra cross-checks.
     g: graph, g[cur] = (nxt, dist)
     st: the vertex to start
     return: if there exists a negative cycle, False
@@ -1016,8 +1014,8 @@ def dinitz(g, source, sink):
 
 
 def topological_sort(graph, indegree):
-    zero_indegree = deque([node for node in graph if indegree[node] == 0])
-    free = [True] * (len(indegree) + 1)
+    zero_indegree = deque([i for i in range(len(graph)) if not indegree[i]])
+    free = [True] * len(indegree)
 
     result = []
     while zero_indegree:
@@ -1509,6 +1507,10 @@ class AhoCorasickTrie:
 7-3. coordinate_compression(lst)
     좌표 압축 구현체
     rank 또는 compressed 모두 리턴 가능
+7-4. bootstrap
+    재귀함수 펴는 무언가
+    재귀함수에서, @bootstrap을 붙인 다음 재귀 호출 시 yield dfs()처럼 사용
+    또한, return ret 대신 yield ret 사용, 맨 마지막에 yield 써주기
 """
 
 
@@ -1563,4 +1565,26 @@ def coordinate_compression(lst):
     rank = {distinct[i]: i for i in range(len(distinct))}
     compressed = [rank[e] for e in lst]
     return compressed
+
+
+def bootstrap(f, stack=[]):
+    from types import GeneratorType
+    def wrappedfunc(*args, **kwargs):
+        if stack:
+            return f(*args, **kwargs)
+        else:
+            to = f(*args, **kwargs)
+            while True:
+                if type(to) is GeneratorType:
+                    stack.append(to)
+                    to = next(to)
+                else:
+                    stack.pop()
+                    if not stack:
+                        break
+                    to = stack[-1].send(to)
+            return to
+
+    return wrappedfunc
+
 ```
