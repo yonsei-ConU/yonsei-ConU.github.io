@@ -6,8 +6,9 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2024-12-17
+last_modified_at: 2024-12-19
 ---
+
 ```py
 import sys
 from collections import deque
@@ -718,12 +719,12 @@ def kruskal(v, edges):
     mst_weight = 0
     for edge in edges:
         weight, s, e = edge
-        if uf.find(s) == uf.find(e):
-            continue
-        else:
+        if uf.find(s) != uf.find(e):
             mst.add(edge)
             mst_weight += weight
             uf.union(s, e)
+        if len(mst) == v - 1:
+            break
     return mst_weight
 
 
@@ -1586,5 +1587,4 @@ def bootstrap(f, stack=[]):
             return to
 
     return wrappedfunc
-
 ```
