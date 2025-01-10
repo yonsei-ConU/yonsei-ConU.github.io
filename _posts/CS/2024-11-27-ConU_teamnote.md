@@ -6,9 +6,8 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2024-12-19
+last_modified_at: 2025-01-10
 ---
-
 ```py
 import sys
 from collections import deque
@@ -91,15 +90,15 @@ def pollard_rho(n):
     for i in [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]:
         if not n % i:
             return i
-    g = lambda x, n, r: (x ** 2 + r) % n
+    g = lambda x, r: (x ** 2 + r) % n
     d = 1
     x = randint(2, n)
     y = x
     c = randint(1, n)
 
     while not d - 1:
-        y = g(g(y, n, c), n, c)
-        x = g(x, n, c)
+        y = g(g(y, c), c)
+        x = g(x, c)
         t = abs(x - y)
         d = gcd(t, n)
 
@@ -683,6 +682,12 @@ def LCS(str1, str2):
     플로우 그래프 g에 start에서 end로 가는 용량이 capacity인 간선을 추가
 5-3-3. dinitz(g, source, sink)
     최대 유량 Dinitz 알고리즘 구현체
+5-3-4. MCMFedge
+    MCMF 전용, 플로우 그래프 간선 클래스
+5-3-5. add_edge_MCMF(g, start, end, capacity, cost)
+    플로우 그래프 g에 start에서 end로 가는 용량이 capacity이고 유량 1당 비용이 cost인 간선을 추가
+5-3-6. MCMF(g, source, sink)
+    MCMF 알고리즘 구현체
 5-4. 기타 그래프 알고리즘
 5-4-1. topological_sorting(graph, indegree)
     위상 정렬 구현체
@@ -1012,6 +1017,105 @@ def dinitz(g, source, sink):
             ret += pushed
 
     return ret
+
+
+class MCMFEdge:
+    def __init__(self, start, end, capacity, cost):
+        self.start = start
+        self.end = end
+        self.capacity = capacity
+        self.cost = cost
+        self.flow = 0
+        self.reverse = None
+
+    def __repr__(self):
+        return f"({self.end}, cap: {self.capacity}, flow: {self.flow}, cost: {self.cost})"
+
+
+def add_edge_mcmf(graph, start, end, capacity, cost):
+    forward = MCMFEdge(start, end, capacity, cost)
+    backward = MCMFEdge(end, start, 0, -cost)
+    forward.reverse = backward
+    backward.reverse = forward
+    graph[start].append(forward)
+    graph[end].append(backward)
+
+
+def MCMF(graph, source, sink):
+    import heapq
+    INF = float('inf')
+    n = len(graph)
+
+    potential = [INF] * n
+    in_queue = [False] * n
+    potential[source] = 0
+
+    q = deque([source])
+    in_queue[source] = True
+
+    while q:
+        u = q.popleft()
+        in_queue[u] = False
+        for edge in graph[u]:
+            if edge.capacity > edge.flow and potential[u] + edge.cost < potential[edge.end]:
+                potential[edge.end] = potential[u] + edge.cost
+                if not in_queue[edge.end]:
+                    in_queue[edge.end] = True
+                    q.append(edge.end)
+
+    flow = 0
+    min_cost = 0
+
+    while True:
+        dist = [INF] * n
+        parent = [(-1, None)] * n
+        dist[source] = 0
+
+        pq = [(0, source)]
+        while pq:
+            cur_dist, u = heapq.heappop(pq)
+            if dist[u] < cur_dist:
+                continue
+            for edge in graph[u]:
+                if edge.flow < edge.capacity:
+                    cost_u_v = edge.cost + potential[u] - potential[edge.end]
+                    nd = cur_dist + cost_u_v
+                    if nd < dist[edge.end]:
+                        dist[edge.end] = nd
+                        parent[edge.end] = (u, edge)
+                        heapq.heappush(pq, (nd, edge.end))
+
+        if dist[sink] == INF:
+            break
+
+        for i in range(n):
+            if dist[i] < INF:
+                potential[i] += dist[i]
+
+        increment_flow = INF
+        v = sink
+        while v != source:
+            u, edge = parent[v]
+            if u == -1:
+                increment_flow = 0
+                break
+            increment_flow = min(increment_flow, edge.capacity - edge.flow)
+            v = u
+
+        if not increment_flow:
+            break
+
+        v = sink
+        while v != source:
+            u, edge = parent[v]
+            edge.flow += increment_flow
+            edge.reverse.flow -= increment_flow
+            min_cost += edge.cost * increment_flow
+            v = u
+
+        flow += increment_flow
+
+    return flow, min_cost
 
 
 def topological_sort(graph, indegree):
