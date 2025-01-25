@@ -719,7 +719,7 @@ def LCS(str1, str2):
 
 def kruskal(v, edges):
     edges.sort()
-    uf = UnionFind(v + 1)
+    uf = UnionFind(v)
     mst = set()
     mst_weight = 0
     for edge in edges:
@@ -735,16 +735,14 @@ def kruskal(v, edges):
 
 def LCA_preprocess(g, root):
     v = len(g)
-    D = [0] * v
     d = [0] * v
     table = [[0] * v for _ in range(v.bit_length())]
 
     def LCA_dfs(cur, parent):
         table[0][cur] = parent
-        for nxt, weight in g[cur]:
+        for nxt in g[cur]:
             if nxt == parent:
                 continue
-            D[nxt] = D[cur] + weight
             d[nxt] = d[cur] + 1
             LCA_dfs(nxt, cur)
 
@@ -754,7 +752,7 @@ def LCA_preprocess(g, root):
         for j in range(v):
             table[i][j] = table[i-1][table[i-1][j]]
 
-    return D, d, table  # distance, depth, table
+    return d, table  # depth, table
 
 
 def LCA_query(u, v, d, table):
@@ -1417,11 +1415,9 @@ def hopcroft_karp(adj, n, m):
 def knuth_morris_pratt(s1, s2):
     fail = [0] * len(s2)
     j = 0
-
     for i in range(1, len(s2)):
-
         while j > 0 and s2[i] != s2[j]:
-            j = fail[j-1]
+            j = fail[j - 1]
 
         if s2[i] == s2[j]:
             j += 1
@@ -1429,11 +1425,9 @@ def knuth_morris_pratt(s1, s2):
 
     result = []
     j = 0
-
     for i in range(len(s1)):
-
         while j > 0 and s1[i] != s2[j]:
-            j = fail[j-1]
+            j = fail[j - 1]
 
         if s1[i] == s2[j]:
             if j + 1 == len(s2):
