@@ -115,7 +115,7 @@ def euler_phi(n, l: set): # calculates phi(n), l: distinct prime divisors
     de = 1
     if n == 1:
         return 1
-    if len(l) == 1:
+    if not l:
         return n - 1
     else:
         for i in l:
