@@ -6,7 +6,7 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2025-01-10
+last_modified_at: 2025-03-18
 ---
 ```py
 import sys
@@ -47,6 +47,8 @@ def minput(): return map(int, input_().split())
     3221225473      3    30      5
 1-9. conv(a: list, b: list) -> list:
     두 리스트 a, b의 이산합성곱을 반환
+1-10. gaussian_elimintaion(eq: List[List[int]]) -> List[List[int]]:
+    행렬을 주면 reduced row echelon form을 구함
 """
 
 
@@ -209,6 +211,51 @@ def conv(a, b):
     c = [(a[i] * b[i]) % mod for i in range(size)]
     c = fft(c, True)
     return c[:n]
+
+
+def gaussian_elimintaion(eq):
+    """
+    :param eq: equation matrix
+    :return: reduced row echelon form
+    """
+    N = len(eq)
+    M = len(eq[0])
+    nonzero_col = -1
+    pivot_row = 0
+    while pivot_row < N:
+        ok = False
+        nonzero_row = -1
+        for col in range(nonzero_col + 1, M - 1):
+            for row in range(pivot_row, N):
+                if eq[row][col]:
+                    ok = True
+                    nonzero_col = col
+                    nonzero_row = row
+                    break
+            if ok:
+                break
+        if not ok:
+            break
+        eq[pivot_row], eq[nonzero_row] = eq[nonzero_row], eq[pivot_row]
+        a = eq[pivot_row][nonzero_col]
+        if a != 1:
+            eq[pivot_row] = [i / a for i in eq[pivot_row]]
+        for row in range(pivot_row + 1, N):
+            a = eq[row][nonzero_col]
+            eq[row] = [eq[row][col] - a * eq[pivot_row][col] for col in range(M)]
+        pivot_row += 1
+    for row in range(N - 1, -1, -1):
+        pivot_col = None
+        for col in range(M - 1):
+            if eq[row][col] != 0:
+                pivot_col = col
+                break
+        if pivot_col is None:
+            continue
+        for k in range(row):
+            a = eq[k][pivot_col]
+            eq[k] = [eq[k][col] - a * eq[row][col] for col in range(M)]
+    return eq
 
 
 """
@@ -431,9 +478,9 @@ def point_in_non_convex_polygon(p, polygon):
 
 
 class UnionFind:
-    def __init__(self, size):
-        self.parent = [i for i in range(size)]
-        self.rank = [0] * size
+    def __init__(self, x):
+        self.parent = [i for i in range(x)]
+        self.size = [1] * x
 
     def find(self, x):
         if self.parent[x] != x:
@@ -443,14 +490,14 @@ class UnionFind:
     def union(self, x, y):
         root_x = self.find(x)
         root_y = self.find(y)
-        if root_x != root_y:
-            if self.rank[root_x] > self.rank[root_y]:
-                self.parent[root_y] = root_x
-            elif self.rank[root_x] < self.rank[root_y]:
-                self.parent[root_x] = root_y
-            else:
-                self.parent[root_y] = root_x
-                self.rank[root_x] += 1
+        if root_x == root_y:
+            return
+        elif self.size[root_x] >= self.size[root_y]:
+            self.size[root_x] += self.size[root_y]
+            self.parent[root_y] = root_x
+        else:
+            self.size[root_y] += self.size[root_x]
+            self.parent[root_x] = root_y
 
 
 class segtree:
@@ -1507,7 +1554,7 @@ def z(s):
 
 def suffix_array(S):
     ret = list(range(len(S)))
-    rank = [ord(i) for i in S]
+    rank = [i for i in S]
     tmp = [0] * len(S)
     k = 1
     while k < len(S):
