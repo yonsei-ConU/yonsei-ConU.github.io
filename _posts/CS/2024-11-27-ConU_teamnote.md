@@ -6,7 +6,7 @@ categories:
 toc: false
 toc_sticky: false
 date: 2024-11-27
-last_modified_at: 2025-03-18
+last_modified_at: 2025-05-17
 ---
 ```py
 import sys
@@ -744,7 +744,7 @@ def LCS(str1, str2):
     재귀 DFS 구현체, A~E 함수 위치에 주의
 5-4-2-2. dfs_nonrecursive(begin, connect)
     비재귀 DFS 구현체, 재귀 DFS에서 A~E위치에 들어갈 함수를 넣으면 됨
-5-4-3. tarjan(g)
+5-4-3. scc(g)
     SCC 타잔 알고리즘 구현체
     강한 연결 요소가 위상정렬된 상태로 리턴됨
 5-4-4. two_sat(N, clauses, trace=False)
@@ -758,7 +758,10 @@ def LCS(str1, str2):
 5-4-6. find_bridge(g)
     단절선 알고리즘 구현체
     모든 단절선을 리턴
-5-4-7. hopcroft_karp(adj, n, m)
+5-4-7. bcc(g)
+    이중 연결 요소 타잔 알고리즘 구현체
+    각 bcc에 속한 간선들을 리턴
+5-4-8. hopcroft_karp(adj, n, m)
     호프크로프트-카프 이분 매칭 알고리즘 구현체
     adj는 그래프, n은 출발 정점 개수, m은 도착 정점 개수
 """
@@ -1022,6 +1025,7 @@ def add_edge(g, start, end, capacity):
 
 
 def dinitz(g, source, sink):
+    from collections import deque
     N = len(g)
     level = [-1] * N
     ret = 0
@@ -1234,7 +1238,7 @@ def dfs_nonrecursive(begin, connect):
             D(u)
 
 
-def tarjan(g):
+def scc(g):
     v = len(g)
     disc = [-1] * v
     low = [-1] * v
@@ -1368,6 +1372,49 @@ def find_bridge(g):
     for root in range(len(g)):
         if disc[root] == -1:
             dfs(root, -1)
+
+    return ret
+
+
+def bcc(g):
+    v = len(g)
+    disc = [-1] * v
+    low = [-1] * v
+    t = 0
+    stack = []
+    ret = []
+
+    def dfs(cur, parent):
+        nonlocal t
+        disc[cur] = t
+        low[cur] = t
+        t += 1
+        children_count = 0
+        for nxt in g[cur]:
+            if disc[nxt] == -1:
+                children_count += 1
+                stack.append((cur, nxt))
+                dfs(nxt, cur)
+                low[cur] = min(low[cur], low[nxt])
+                if parent == -1 and children_count > 1 or parent != -1 and low[nxt] >= disc[cur]:
+                    w = None
+                    cur_bcc = []
+                    while w != (cur, nxt):
+                        w = stack.pop()
+                        cur_bcc.append(w)
+                    ret.append(cur_bcc)
+            elif nxt != parent and disc[nxt] < disc[cur]:
+                low[cur] = min(low[cur], disc[nxt])
+                stack.append((cur, nxt))
+
+    for root in range(v):
+        if disc[root] == -1:
+            dfs(root, -1)
+            cur_bcc = []
+            while stack:
+                cur_bcc.append(stack.pop())
+            if cur_bcc:
+                ret.append(cur_bcc)
 
     return ret
 
