@@ -744,13 +744,13 @@ def LCS(str1, str2):
     재귀 DFS 구현체, A~E 함수 위치에 주의
 5-4-2-2. dfs_nonrecursive(begin, connect)
     비재귀 DFS 구현체, 재귀 DFS에서 A~E위치에 들어갈 함수를 넣으면 됨
-5-4-3. scc(g)
+5-4-3. getSCC(g)
     SCC 타잔 알고리즘 구현체
     강한 연결 요소가 위상정렬된 상태로 리턴됨
 5-4-4. two_sat(N, clauses, trace=False)
     변수 N개짜리 2-sat의 만족 가능 여부를 리턴
     trace값이 참이면, 모순이 일어나지 않을 때 가능한 실제 해를 리턴
-    tarjan 함수 필요
+    getSCC 함수 필요
     clauses에는 11280번 문제에서 주어지는 것과 같은 형식으로 입력
 5-4-5. find_articulation_point(g)
     단절점 알고리즘 구현체
@@ -1238,7 +1238,7 @@ def dfs_nonrecursive(begin, connect):
             D(u)
 
 
-def scc(g):
+def getSCC(g):
     v = len(g)
     disc = [-1] * v
     low = [-1] * v
@@ -1297,7 +1297,7 @@ def two_sat(N, clauses, trace=False):
         a -= 1; b -= 1
         g[(a + N) % (2 * N)].append(b)
         g[(b + N) % (2 * N)].append(a)
-    scc = tarjan(g)
+    scc = getSCC(g)
     scc_rev = [0] * (N << 1)
     for i in range(len(scc)):
         for c in scc[i]:
